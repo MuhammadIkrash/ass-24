@@ -1,44 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>WeatherMinds Pro</title>
-<link rel="stylesheet" href="index.css">
-<link rel="shortcut icon" href="Weather.png" type="image/x-icon">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather App</title>
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" type="icon" href="Weather.png">
 </head>
-
 <body>
 
-<header>
-    <div class="logo">
-        <h2>🌤 WeatherMinds Pro</h2>
+<div class="wrap">
+  <p class="title">Weather App</p>
+  <p class="subtitle">Built with fetch + Promise chain</p>
+
+  <div class="row">
+    <input type="text" id="cityInput" placeholder="Enter city name..." />
+    <button id="searchBtn">Search</button>
+  </div>
+
+  <p class="error" id="errorMsg"></p>
+  <p class="loader" id="loaderMsg"></p>
+
+  <div class="card" id="resultCard">
+    <div class="city-name">
+      <span id="cityName"></span>
+      <span class="country" id="countryBadge"></span>
     </div>
-
-    <div class="search">
-        <input id="cityInput" placeholder="Enter city..." />
-        <button id="btn">Search</button>
+    <div class="grid">
+      <div class="stat">
+        <div class="stat-label">Temperature</div>
+        <div class="stat-value"><span id="temp">—</span> <span class="stat-unit">°C</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Wind Speed</div>
+        <div class="stat-value"><span id="wind">—</span> <span class="stat-unit">km/h</span></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Humidity</div>
+        <div class="stat-value"><span id="humidity">—</span> <span class="stat-unit">%</span></div>
+      </div>
     </div>
-</header>
-
-<div class="container">
-
-    <!-- CURRENT -->
-    <div class="card">
-        <h3 id="city">City</h3>
-        <div class="big-temp" id="temp">--°C</div>
-        <p id="desc">Weather</p>
-        <hr style="margin:10px 0;opacity:0.2">
-
-        <p id="wind">Wind: --</p>
-    </div>
-
-    <!-- FORECAST -->
-    <div class="card">
-        <h3>5 Day Forecast</h3>
-        <div class="forecast" id="forecast"></div>
-    </div>
-
+    <p class="note">Live data · Open-Meteo API</p>
+  </div>
 </div>
 
 <script src="index.js"></script>

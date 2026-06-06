@@ -1,66 +1,97 @@
-// ICONS
-function icon(code){
-    if(code===0) return "☀️";
-    if(code<=2) return "⛅";
-    if(code<=48) return "☁️";
-    if(code<=67) return "🌧️";
-    return "⛈️";
-}
+  var cityInput   = document.getElementById("cityInput");
+  var searchBtn   = document.getElementById("searchBtn");
+  var errorMsg    = document.getElementById("errorMsg");
+  var loaderMsg   = document.getElementById("loaderMsg");
+  var resultCard  = document.getElementById("resultCard");
 
-// CITY → COORDS
-async function getCoords(city){
-    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`);
-    const data = await res.json();
+  function showError(msg) {
+    errorMsg.textContent  = msg;
+    loaderMsg.textContent = "";
+    resultCard.classList.remove("show");
+  }
 
-    if(!data.results) return null;
+  function showLoader(msg) {
+    loaderMsg.textContent = msg;
+    errorMsg.textContent  = "";
+    resultCard.classList.remove("show");
+  }
 
-    return {
-        name:data.results[0].name,
-        lat:data.results[0].latitude,
-        lon:data.results[0].longitude
-    };
-}
+  function clearMessages() {
+    errorMsg.textContent  = "";
+    loaderMsg.textContent = "";
+  }
 
-// WEATHER
-async function getWeather(lat,lon){
-    const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto`
-    );
-    return await res.json();
-}
+  function getCoordinates(city) {
+    var url = "https://geocoding-api.open-meteo.com/v1/search?name="
+              + encodeURIComponent(city) + "&count=1";
 
-// MAIN
-document.getElementById("btn").addEventListener("click", async ()=>{
+    return fetch(url)
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        if (!data.results || data.results.length === 0) {
+          throw new Error("City not found. Please try another name.");
+        }
+        return data.results[0];
+      });
+  }
 
-    const city = document.getElementById("cityInput").value.trim();
-    if(!city) return;
+  function getWeatherData(lat, lon) {
+    var url = "https://api.open-meteo.com/v1/forecast"
+              + "?latitude="  + lat
+              + "&longitude=" + lon
+              + "&current=temperature_2m,wind_speed_10m,relative_humidity_2m";
 
-    const coords = await getCoords(city);
-    if(!coords){
-        alert("City not found!");
-        return;
+    return fetch(url)
+      .then(function(response) {
+        return response.json();
+      });
+  }
+
+  function displayResult(location, weather) {
+    document.getElementById("cityName").textContent    = location.name;
+    document.getElementById("countryBadge").textContent = location.country || "";
+    document.getElementById("temp").textContent        = Math.round(weather.current.temperature_2m);
+    document.getElementById("wind").textContent        = Math.round(weather.current.wind_speed_10m);
+    document.getElementById("humidity").textContent    = Math.round(weather.current.relative_humidity_2m);
+    clearMessages();
+    resultCard.classList.add("show");
+  }
+
+  function searchWeather() {
+    var city = cityInput.value.trim();
+
+    if (!city) {
+      showError("Please enter a city name.");
+      return;
     }
 
-    const weather = await getWeather(coords.lat,coords.lon);
+    showLoader("Searching for " + city + "...");
 
-    // CURRENT
-    document.getElementById("city").innerText = coords.name;
-    document.getElementById("temp").innerText = weather.current_weather.temperature+"°C";
-    document.getElementById("wind").innerText = "Wind: "+weather.current_weather.windspeed+" km/h";
+    getCoordinates(city)
+      .then(function(location) {
+        loaderMsg.textContent = "Fetching weather data...";
 
-    document.getElementById("desc").innerText =
-        "Weather Code: "+weather.current_weather.weathercode;
+        return getWeatherData(location.latitude, location.longitude)
+          .then(function(weather) {
+            return { location: location, weather: weather };
+          });
+      })
+      .then(function(result) {
+        displayResult(result.location, result.weather);
+      })
+      .catch(function(error) {
+        showError(error.message || "Something went wrong. Check your connection.");
+      });
+  }
 
-    // FORECAST
-    const box = document.getElementById("forecast");
-    box.innerHTML="";
+  searchBtn.addEventListener("click", function() {
+    searchWeather();
+  });
 
-    for(let i=0;i<5;i++){
-        box.innerHTML += `
-        <div class="day">
-            <div>${icon(weather.daily.weathercode[i])}</div>
-            <p>${weather.daily.temperature_2m_max[i]}° / ${weather.daily.temperature_2m_min[i]}°</p>
-        </div>
-        `;
+  cityInput.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      searchWeather();
     }
-});
+  });
